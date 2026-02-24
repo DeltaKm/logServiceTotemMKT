@@ -1,36 +1,187 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Log Verification App
 
-## Getting Started
+Sistema completo di gestione e monitoraggio log per applicazioni con Next.js e MongoDB.
 
-First, run the development server:
+## 🚀 Caratteristiche
 
+- **Dashboard Interattiva**: Visualizza e filtra i log in tempo reale
+- **API RESTful**: Endpoints per salvare e recuperare log
+- **Statistiche**: Contatori per tipo di log (success, error, warning, info)
+- **Filtri Avanzati**: Filtra per app, livello, date
+- **Design Moderno**: UI responsive con Tailwind CSS
+- **MongoDB**: Database scalabile per la gestione dei log
+
+## 📋 Requisiti
+
+- Node.js 18+
+- MongoDB (cloud o locale)
+
+## 🛠️ Installazione
+
+1. Installa le dipendenze:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Configura le variabili d'ambiente (già fatto in `.env.local`):
+```
+DATABASE_URL="mongodb+srv://user:ShadowCmh2025%40%21@cluster0.0flua7d.mongodb.net/log"
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. Avvia il server di sviluppo:
+```bash
+npm run dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+4. Apri [http://localhost:3000](http://localhost:3000) nel browser
 
-## Learn More
+## 📡 API Endpoints
 
-To learn more about Next.js, take a look at the following resources:
+### POST /api/logs
+Crea un nuovo log
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+**Body:**
+```json
+{
+  "app": "my-app",
+  "level": "error",
+  "message": "Errore di connessione al database",
+  "metadata": {
+    "userId": "123",
+    "ip": "192.168.1.1"
+  },
+  "stackTrace": "Error: ...",
+  "userId": "user123",
+  "environment": "production"
+}
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+**Campi obbligatori:** `app`, `level`, `message`
 
-## Deploy on Vercel
+**Level validi:** `success`, `error`, `warning`, `info`
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### GET /api/logs
+Recupera i log con filtri
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+**Query params:**
+- `app` - Nome dell'applicazione
+- `level` - Livello del log (success, error, warning, info)
+- `startDate` - Data inizio (ISO 8601)
+- `endDate` - Data fine (ISO 8601)
+- `limit` - Numero di risultati (default: 100)
+- `page` - Numero pagina (default: 1)
+
+**Esempio:**
+```
+GET /api/logs?app=my-app&level=error&limit=50
+```
+
+### GET /api/logs/apps
+Recupera la lista di tutte le applicazioni
+
+### GET /api/logs/stats
+Recupera statistiche sui log
+
+**Query params:**
+- `app` - Filtra per applicazione specifica
+
+## 📊 Struttura del Log
+
+```typescript
+{
+  app: string;              // Nome dell'applicazione (obbligatorio)
+  level: LogLevel;          // success | error | warning | info (obbligatorio)
+  message: string;          // Messaggio del log (obbligatorio)
+  metadata?: object;        // Dati aggiuntivi personalizzati
+  timestamp: Date;          // Data e ora (auto-generato)
+  stackTrace?: string;      // Stack trace per errori
+  userId?: string;          // ID utente correlato
+  environment?: string;     // development | staging | production
+}
+```
+
+## 🎨 Funzionalità Dashboard
+
+1. **Statistiche in tempo reale**: Visualizza contatori per ogni tipo di log
+2. **Filtri dinamici**: Filtra per app e livello
+3. **Vista dettagliata**: Espandi i log per vedere metadata e stack trace
+4. **Design responsive**: Funziona su desktop e mobile
+5. **Indicatori colorati**: Colori differenti per ogni livello di log
+
+## 🔧 Esempio di utilizzo
+
+### Da un'altra applicazione Node.js:
+
+```javascript
+// Invia un log di successo
+await fetch('http://localhost:3000/api/logs', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    app: 'my-app',
+    level: 'success',
+    message: 'Operazione completata con successo',
+    metadata: { operation: 'user-registration', duration: 234 }
+  })
+});
+
+// Invia un log di errore
+await fetch('http://localhost:3000/api/logs', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    app: 'my-app',
+    level: 'error',
+    message: 'Errore durante l\'elaborazione',
+    stackTrace: error.stack,
+    metadata: { errorCode: 'DB_CONNECTION_FAILED' }
+  })
+});
+```
+
+### Da curl:
+
+```bash
+curl -X POST http://localhost:3000/api/logs \
+  -H "Content-Type: application/json" \
+  -d '{
+    "app": "test-app",
+    "level": "info",
+    "message": "Test log message"
+  }'
+```
+
+## 🚀 Deploy su Vercel
+
+1. Crea un account su [Vercel](https://vercel.com)
+2. Installa Vercel CLI: `npm i -g vercel`
+3. Esegui: `vercel`
+4. Configura le variabili d'ambiente su Vercel dashboard
+
+## 📝 Note
+
+- I log sono ordinati per data decrescente (più recenti prima)
+- Gli indici MongoDB sono ottimizzati per query su app, level e timestamp
+- La paginazione è supportata per gestire grandi quantità di log
+- Il database usa UTC per i timestamp
+
+## 🔒 Sicurezza
+
+Per produzione, considera di:
+- Aggiungere autenticazione API (API keys, JWT)
+- Implementare rate limiting
+- Validare e sanitizzare tutti gli input
+- Usare HTTPS
+- Limitare le dimensioni del payload
+
+## 📦 Tecnologie utilizzate
+
+- **Next.js 15** - Framework React
+- **TypeScript** - Type safety
+- **Tailwind CSS** - Styling
+- **MongoDB + Mongoose** - Database
+- **date-fns** - Gestione date
+
+## 🤝 Supporto
+
+Per problemi o domande, consulta la documentazione o apri un issue.
