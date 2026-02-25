@@ -79,6 +79,7 @@ export async function POST(request: NextRequest) {
         { success: false, error: 'app, level e message sono obbligatori' },
         { status: 400 }
       );
+      
     }
 
     const validLevels: LogLevel[] = ['success', 'error', 'warning', 'info'];
