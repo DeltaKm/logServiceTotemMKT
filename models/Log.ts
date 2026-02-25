@@ -11,6 +11,7 @@ export interface ILog {
   stackTrace?: string;
   userId?: string;
   environment?: string;
+  responsePayload?: Record<string, any>;
 }
 
 const LogSchema = new Schema<ILog>({
@@ -48,6 +49,9 @@ const LogSchema = new Schema<ILog>({
     type: String,
     enum: ['development', 'staging', 'production'],
     default: 'production',
+  },
+  responsePayload: {
+    type: Schema.Types.Mixed,
   },
 }, {
   timestamps: true,

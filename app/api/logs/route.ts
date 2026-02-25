@@ -98,6 +98,7 @@ export async function POST(request: NextRequest) {
       stackTrace: body.stackTrace,
       userId: body.userId,
       environment: body.environment || 'production',
+      responsePayload: body.responsePayload,
     });
 
     return NextResponse.json(

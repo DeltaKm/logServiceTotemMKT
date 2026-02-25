@@ -16,6 +16,7 @@ interface Log {
   stackTrace?: string;
   userId?: string;
   environment?: string;
+  responsePayload?: Record<string, any>;
 }
 
 interface Stats {
@@ -287,19 +288,27 @@ export default function Home() {
                         {log.userId && <span>👤 User: {log.userId}</span>}
                       </div>
 
-                      {(log.metadata || log.stackTrace) && (
-                        <button
-                          onClick={() =>
-                            setExpandedLog(expandedLog === log._id ? null : log._id)
-                          }
-                          className="mt-3 text-blue-600 hover:text-blue-800 text-sm font-medium"
-                        >
-                          {expandedLog === log._id ? '▼ Nascondi dettagli' : '▶ Mostra dettagli'}
-                        </button>
-                      )}
+                      <button
+                        onClick={() =>
+                          setExpandedLog(expandedLog === log._id ? null : log._id)
+                        }
+                        className="mt-3 text-blue-600 hover:text-blue-800 text-sm font-medium"
+                      >
+                        {expandedLog === log._id ? '▼ Nascondi dettagli' : '▶ Mostra dettagli'}
+                      </button>
 
                       {expandedLog === log._id && (
                         <div className="mt-4 space-y-3">
+                          <div>
+                            <p className="text-sm font-semibold text-gray-700 mb-1">
+                              Response Payload:
+                            </p>
+                            <pre className="bg-green-50 p-3 rounded text-xs overflow-x-auto text-green-800">
+                              {log.responsePayload 
+                                ? JSON.stringify(log.responsePayload, null, 2)
+                                : '// Nessun payload di risposta'}
+                            </pre>
+                          </div>
                           {log.metadata && (
                             <div>
                               <p className="text-sm font-semibold text-gray-700 mb-1">
