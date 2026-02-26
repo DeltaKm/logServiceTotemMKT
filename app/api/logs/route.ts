@@ -135,6 +135,12 @@ export async function POST(request: NextRequest) {
     // Crea il log
     const log = await Log.create(logData);
 
+    // IMPORTANTE: Forza Mongoose a riconoscere che responsePayload è modificato
+    if (logData.responsePayload) {
+      log.markModified('responsePayload');
+      await log.save();
+    }
+
     console.log('✅ Log salvato con ID:', log._id);
     console.log('📦 responsePayload salvato nel DB:', log.responsePayload);
     console.log('📦 Log completo salvato:', log.toObject());

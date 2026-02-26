@@ -50,13 +50,10 @@ const LogSchema = new Schema<ILog>({
     enum: ['development', 'staging', 'production'],
     default: 'production',
   },
-  responsePayload: {
-    type: Object,
-    default: undefined,
-    strict: false,
-  },
+  responsePayload: Schema.Types.Mixed,
 }, {
   timestamps: true,
+  minimize: false,
   strict: false,
 });
 
