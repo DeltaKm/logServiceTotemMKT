@@ -40,6 +40,7 @@ export async function GET(request: NextRequest) {
 
     // Recupera i log
     const logs = await Log.find(filter)
+      .select('+responsePayload +metadata +stackTrace +userId +environment')
       .sort({ timestamp: -1 })
       .limit(limit)
       .skip(skip)
@@ -47,9 +48,13 @@ export async function GET(request: NextRequest) {
 
     console.log('📊 GET /api/logs - Logs recuperati:', logs.length);
     if (logs.length > 0) {
-      console.log('🔍 Primo log completo:', logs[0]);
+      console.log('🔍 Primo log completo:', JSON.stringify(logs[0], null, 2));
       console.log('📦 responsePayload primo log:', logs[0].responsePayload);
+      console.log('📦 Tipo responsePayload:', typeof logs[0].responsePayload);
       console.log('📝 metadata primo log:', logs[0].metadata);
+      
+      // Verifica tutti i campi
+      console.log('📋 Campi disponibili nel primo log:', Object.keys(logs[0]));
     }
 
     // Conta totale per paginazione
