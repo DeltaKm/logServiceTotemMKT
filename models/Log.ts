@@ -51,10 +51,13 @@ const LogSchema = new Schema<ILog>({
     default: 'production',
   },
   responsePayload: {
-    type: Schema.Types.Mixed,
+    type: Object,
+    default: undefined,
+    strict: false,
   },
 }, {
   timestamps: true,
+  strict: false,
 });
 
 // Crea indici composti per query più efficienti

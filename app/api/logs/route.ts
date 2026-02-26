@@ -82,7 +82,8 @@ export async function POST(request: NextRequest) {
     
     console.log('🔍 POST /api/logs - Body ricevuto:', body);
     console.log('📦 responsePayload ricevuto:', body.responsePayload);
-    console.log('📝 metadata ricevuto:', body.metadata);
+    console.log('� Tipo responsePayload:', typeof body.responsePayload);
+    console.log('�📝 metadata ricevuto:', body.metadata);
     
     // Validazione
     if (!body.app || !body.level || !body.message) {
@@ -101,17 +102,37 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Crea il log
-    const log = await Log.create({
+    // Prepara i dati del log
+    const logData: any = {
       app: body.app,
       level: body.level,
       message: body.message,
-      metadata: body.metadata,
-      stackTrace: body.stackTrace,
-      userId: body.userId,
       environment: body.environment || 'production',
-      responsePayload: body.responsePayload,
-    });
+    };
+
+    // Aggiungi campi opzionali solo se esistono
+    if (body.metadata !== undefined && body.metadata !== null) {
+      logData.metadata = body.metadata;
+    }
+    if (body.stackTrace) {
+      logData.stackTrace = body.stackTrace;
+    }
+    if (body.userId) {
+      logData.userId = body.userId;
+    }
+    if (body.responsePayload !== undefined && body.responsePayload !== null) {
+      logData.responsePayload = body.responsePayload;
+      console.log('✅ responsePayload aggiunto ai dati:', logData.responsePayload);
+    }
+
+    console.log('📦 logData completo da salvare:', JSON.stringify(logData, null, 2));
+
+    // Crea il log
+    const log = await Log.create(logData);
+
+    console.log('✅ Log salvato con ID:', log._id);
+    console.log('📦 responsePayload salvato nel DB:', log.responsePayload);
+    console.log('📦 Log completo salvato:', log.toObject());
 
     console.log('✅ Log salvato nel DB:', log.toObject());
     console.log('📦 responsePayload nel log salvato:', log.responsePayload);
