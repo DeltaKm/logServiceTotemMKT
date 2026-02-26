@@ -33,6 +33,14 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [expandedLog, setExpandedLog] = useState<string | null>(null);
 
+  // Carica filtri da localStorage all'avvio
+  useEffect(() => {
+    const savedApp = localStorage.getItem('logFilter_app');
+    const savedLevel = localStorage.getItem('logFilter_level');
+    if (savedApp) setSelectedApp(savedApp);
+    if (savedLevel) setSelectedLevel(savedLevel as LogLevel | '');
+  }, []);
+
   // Funzione per polling silenzioso - aggiunge solo nuovi log
   const fetchNewLogs = useCallback(async () => {
     try {
@@ -167,6 +175,29 @@ export default function Home() {
     return stats?.byLevel.find(s => s._id === level)?.count || 0;
   };
 
+  // Funzioni per gestire i filtri con localStorage
+  const handleAppChange = (value: string) => {
+    setSelectedApp(value);
+    localStorage.setItem('logFilter_app', value);
+  };
+
+  const handleLevelChange = (value: LogLevel | '') => {
+    setSelectedLevel(value);
+    localStorage.setItem('logFilter_level', value);
+  };
+
+  const handleResetFilters = () => {
+    setSelectedApp('');
+    setSelectedLevel('');
+    localStorage.removeItem('logFilter_app');
+    localStorage.removeItem('logFilter_level');
+  };
+
+  const handleManualRefresh = () => {
+    fetchLogs();
+    fetchStats();
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <div className="container mx-auto px-4 py-8">
@@ -226,19 +257,19 @@ export default function Home() {
         {/* Filtri */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-8">
           <h2 className="text-xl font-semibold text-gray-800 mb-4">🔍 Filtri</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Applicazione
               </label>
               <select
                 value={selectedApp}
-                onChange={(e) => setSelectedApp(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                onChange={(e) => handleAppChange(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900 font-medium"
               >
-                <option value="">Tutte le app</option>
+                <option value="" className="text-gray-900">Tutte le app</option>
                 {apps.map((app) => (
-                  <option key={app} value={app}>
+                  <option key={app} value={app} className="text-gray-900">
                     {app}
                   </option>
                 ))}
@@ -251,23 +282,29 @@ export default function Home() {
               </label>
               <select
                 value={selectedLevel}
-                onChange={(e) => setSelectedLevel(e.target.value as LogLevel | '')}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                onChange={(e) => handleLevelChange(e.target.value as LogLevel | '')}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900 font-medium"
               >
-                <option value="">Tutti i livelli</option>
-                <option value="success">✓ Success</option>
-                <option value="error">✗ Error</option>
-                <option value="warning">⚠ Warning</option>
-                <option value="info">ℹ Info</option>
+                <option value="" className="text-gray-900">Tutti i livelli</option>
+                <option value="success" className="text-green-700">✓ Success</option>
+                <option value="error" className="text-red-700">✗ Error</option>
+                <option value="warning" className="text-yellow-700">⚠ Warning</option>
+                <option value="info" className="text-blue-700">ℹ Info</option>
               </select>
             </div>
 
             <div className="flex items-end">
               <button
-                onClick={() => {
-                  setSelectedApp('');
-                  setSelectedLevel('');
-                }}
+                onClick={handleManualRefresh}
+                className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center justify-center gap-2"
+              >
+                🔄 Ricarica
+              </button>
+            </div>
+
+            <div className="flex items-end">
+              <button
+                onClick={handleResetFilters}
                 className="w-full px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium"
               >
                 Reset Filtri
