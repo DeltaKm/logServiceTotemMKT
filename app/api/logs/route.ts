@@ -45,6 +45,13 @@ export async function GET(request: NextRequest) {
       .skip(skip)
       .lean();
 
+    console.log('📊 GET /api/logs - Logs recuperati:', logs.length);
+    if (logs.length > 0) {
+      console.log('🔍 Primo log completo:', logs[0]);
+      console.log('📦 responsePayload primo log:', logs[0].responsePayload);
+      console.log('📝 metadata primo log:', logs[0].metadata);
+    }
+
     // Conta totale per paginazione
     const total = await Log.countDocuments(filter);
 
@@ -72,6 +79,10 @@ export async function POST(request: NextRequest) {
     await dbConnect();
 
     const body = await request.json();
+    
+    console.log('🔍 POST /api/logs - Body ricevuto:', body);
+    console.log('📦 responsePayload ricevuto:', body.responsePayload);
+    console.log('📝 metadata ricevuto:', body.metadata);
     
     // Validazione
     if (!body.app || !body.level || !body.message) {
@@ -101,6 +112,9 @@ export async function POST(request: NextRequest) {
       environment: body.environment || 'production',
       responsePayload: body.responsePayload,
     });
+
+    console.log('✅ Log salvato nel DB:', log.toObject());
+    console.log('📦 responsePayload nel log salvato:', log.responsePayload);
 
     return NextResponse.json(
       { success: true, data: log },

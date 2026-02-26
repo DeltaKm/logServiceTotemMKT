@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
 
@@ -33,11 +33,49 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [expandedLog, setExpandedLog] = useState<string | null>(null);
 
+  // Funzione per polling silenzioso - aggiunge solo nuovi log
+  const fetchNewLogs = useCallback(async () => {
+    try {
+      const params = new URLSearchParams();
+      if (selectedApp) params.append('app', selectedApp);
+      if (selectedLevel) params.append('level', selectedLevel);
+      params.append('limit', '50');
+
+      const res = await fetch(`/api/logs?${params}`);
+      const data = await res.json();
+      
+      if (data.success && data.data.length > 0) {
+        // Controlla se ci sono nuovi log
+        setLogs(prevLogs => {
+          const currentIds = prevLogs.map(log => log._id);
+          const newLogs = data.data.filter((log: Log) => !currentIds.includes(log._id));
+          
+          if (newLogs.length > 0) {
+            console.log(`✨ Aggiunti ${newLogs.length} nuovi log`);
+            return [...newLogs, ...prevLogs];
+          }
+          return prevLogs;
+        });
+      }
+    } catch (error) {
+      console.error('Errore nel polling dei log:', error);
+    }
+  }, [selectedApp, selectedLevel]);
+
   useEffect(() => {
     fetchApps();
     fetchStats();
     fetchLogs();
-  }, []);
+    
+    // Auto-refresh ogni 3 secondi - usa fetchNewLogs per aggiungere solo nuovi log
+    const interval = setInterval(() => {
+      fetchNewLogs();
+      fetchStats();
+    }, 3000);
+
+    // Cleanup: rimuove l'interval quando il componente viene smontato
+    return () => clearInterval(interval);
+  }, [fetchNewLogs]);
 
   useEffect(() => {
     fetchLogs();
@@ -79,8 +117,14 @@ export default function Home() {
 
       const res = await fetch(`/api/logs?${params}`);
       const data = await res.json();
+      console.log('🌐 Frontend - Dati ricevuti dall\'API:', data);
       if (data.success) {
         setLogs(data.data);
+        console.log('📋 Frontend - Logs settati:', data.data.length);
+        if (data.data.length > 0) {
+          console.log('🔍 Frontend - Primo log:', data.data[0]);
+          console.log('📦 Frontend - responsePayload primo log:', data.data[0].responsePayload);
+        }
       }
     } catch (error) {
       console.error('Errore nel recupero dei log:', error);
@@ -277,15 +321,15 @@ export default function Home() {
                         )}
                       </div>
 
-                      <p className="text-gray-800 font-medium text-lg mb-2">
+                      <p className="text-gray-800 font-medium text-lg mb-2 break-all max-w-full">
                         {log.message}
                       </p>
 
-                      <div className="flex items-center gap-4 text-sm text-gray-500">
-                        <span>
+                      <div className="flex items-center gap-4 text-sm text-gray-500 flex-wrap">
+                        <span className="break-all">
                           🕐 {format(new Date(log.timestamp), 'dd MMM yyyy HH:mm:ss', { locale: it })}
                         </span>
-                        {log.userId && <span>👤 User: {log.userId}</span>}
+                        {log.userId && <span className="break-all">👤 User: {log.userId}</span>}
                       </div>
 
                       <button
@@ -303,10 +347,16 @@ export default function Home() {
                             <p className="text-sm font-semibold text-gray-700 mb-1">
                               Response Payload:
                             </p>
-                            <pre className="bg-green-50 p-3 rounded text-xs overflow-x-auto text-green-800">
-                              {log.responsePayload 
-                                ? JSON.stringify(log.responsePayload, null, 2)
-                                : '// Nessun payload di risposta'}
+                            <pre className="bg-green-50 p-3 rounded text-xs text-green-800 whitespace-pre-wrap break-all max-w-full overflow-auto">
+                              {(() => {
+                                console.log('🎨 Rendering responsePayload per log:', log._id);
+                                console.log('📦 Valore responsePayload:', log.responsePayload);
+                                console.log('📦 Tipo:', typeof log.responsePayload);
+                                console.log('📦 Truthy?', !!log.responsePayload);
+                                return log.responsePayload 
+                                  ? JSON.stringify(log.responsePayload, null, 2)
+                                  : '// Nessun payload di risposta';
+                              })()}
                             </pre>
                           </div>
                           {log.metadata && (
@@ -314,7 +364,7 @@ export default function Home() {
                               <p className="text-sm font-semibold text-gray-700 mb-1">
                                 Metadata:
                               </p>
-                              <pre className="bg-gray-100 p-3 rounded text-xs overflow-x-auto">
+                              <pre className="bg-gray-100 p-3 rounded text-xs whitespace-pre-wrap break-all max-w-full overflow-auto">
                                 {JSON.stringify(log.metadata, null, 2)}
                               </pre>
                             </div>
@@ -324,7 +374,7 @@ export default function Home() {
                               <p className="text-sm font-semibold text-gray-700 mb-1">
                                 Stack Trace:
                               </p>
-                              <pre className="bg-red-50 p-3 rounded text-xs overflow-x-auto text-red-800">
+                              <pre className="bg-red-50 p-3 rounded text-xs text-red-800 whitespace-pre-wrap break-all max-w-full overflow-auto">
                                 {log.stackTrace}
                               </pre>
                             </div>

@@ -1,9 +1,7 @@
 #!/bin/bash
 
-echo "🧪 Testing responsePayload..."
-echo ""
-
-# Invia un log con responsePayload
+echo "🧪 Test 1: Invio log CON responsePayload"
+echo "=========================================="
 curl -X POST http://localhost:3000/api/logs \
   -H "Content-Type: application/json" \
   -d '{
@@ -25,4 +23,25 @@ curl -X POST http://localhost:3000/api/logs \
 
 echo ""
 echo ""
-echo "✅ Log inviato! Controlla i log del server per vedere cosa è stato ricevuto."
+echo "🧪 Test 2: Invio log CON metadata (per confronto)"
+echo "=================================================="
+curl -X POST http://localhost:3000/api/logs \
+  -H "Content-Type: application/json" \
+  -d '{
+    "app": "test-metadata-app",
+    "level": "info",
+    "message": "Test con metadata",
+    "userId": "test-user-456",
+    "metadata": {
+      "version": "1.0.0",
+      "source": "test"
+    }
+  }'
+
+echo ""
+echo ""
+echo "✅ Test completati!"
+echo "📋 Controlla i log del server Next.js per vedere:"
+echo "   - Cosa riceve l'endpoint POST"
+echo "   - Cosa viene salvato nel DB"
+echo "   - Cosa ritorna l'endpoint GET"
