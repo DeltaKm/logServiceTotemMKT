@@ -126,20 +126,29 @@ export async function POST(request: NextRequest) {
       logData.userId = body.userId;
     }
     if (body.responsePayload !== undefined && body.responsePayload !== null) {
-      logData.responsePayload = body.responsePayload;
-      console.log('✅ responsePayload aggiunto ai dati:', logData.responsePayload);
+      // Assicurati che sia un oggetto valido
+      if (typeof body.responsePayload === 'object') {
+        logData.responsePayload = body.responsePayload;
+        console.log('✅ responsePayload aggiunto ai dati:', JSON.stringify(logData.responsePayload));
+      } else {
+        console.log('⚠️ responsePayload non è un oggetto:', typeof body.responsePayload);
+      }
+    } else {
+      console.log('ℹ️ Nessun responsePayload fornito');
     }
 
     console.log('📦 logData completo da salvare:', JSON.stringify(logData, null, 2));
 
-    // Crea il log
-    const log = await Log.create(logData);
+    // Crea il log usando new invece di create per poter usare markModified
+    const log = new Log(logData);
 
     // IMPORTANTE: Forza Mongoose a riconoscere che responsePayload è modificato
     if (logData.responsePayload) {
       log.markModified('responsePayload');
-      await log.save();
+      console.log('🔧 markModified chiamato per responsePayload');
     }
+    
+    await log.save();
 
     console.log('✅ Log salvato con ID:', log._id);
     console.log('📦 responsePayload salvato nel DB:', log.responsePayload);
