@@ -1,9 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import Log, { LogLevel } from '@/models/Log';
+import { requireDashboardAuth } from '@/lib/apiAuth';
+import { requireWriteApiKey } from '@/lib/apiAuth';
 
 // GET - Recupera i log con filtri
 export async function GET(request: NextRequest) {
+  const authError = requireDashboardAuth(request);
+  if (authError) {
+    return authError;
+  }
+
   try {
     await dbConnect();
 
@@ -80,6 +87,11 @@ export async function GET(request: NextRequest) {
 
 // POST - Crea un nuovo log
 export async function POST(request: NextRequest) {
+  const authError = requireWriteApiKey(request);
+  if (authError) {
+    return authError;
+  }
+
   try {
     await dbConnect();
 

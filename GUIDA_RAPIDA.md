@@ -20,10 +20,10 @@ L'applicazione è attualmente in esecuzione e il database è stato popolato con 
 ✅ **Aggiornamento automatico** - I filtri aggiornano automaticamente i dati
 
 ### API Backend
-✅ **POST /api/logs** - Crea nuovi log
-✅ **GET /api/logs** - Recupera log con filtri (app, level, date, paginazione)
-✅ **GET /api/logs/apps** - Lista tutte le applicazioni
-✅ **GET /api/logs/stats** - Statistiche aggregate
+✅ **POST /api/logs** - Crea nuovi log (**protetto da API key**)
+✅ **GET /api/logs** - Recupera log con filtri (**protetto da Basic Auth**)
+✅ **GET /api/logs/apps** - Lista tutte le applicazioni (**protetto da Basic Auth**)
+✅ **GET /api/logs/stats** - Statistiche aggregate (**protetto da Basic Auth**)
 
 ### Database
 ✅ **MongoDB Atlas** - Database cloud già configurato
@@ -50,6 +50,7 @@ npm run dev
 # Crea un log di successo
 curl -X POST http://localhost:3001/api/logs \
   -H "Content-Type: application/json" \
+  -H "x-api-key: $xApiKey" \
   -d '{
     "app": "test-app",
     "level": "success",
@@ -58,13 +59,13 @@ curl -X POST http://localhost:3001/api/logs \
   }'
 
 # Recupera tutti i log
-curl http://localhost:3001/api/logs
+curl -u "$DASHBOARD_USER:$DASHBOARD_PASSWORD" http://localhost:3001/api/logs
 
 # Recupera log di errore
-curl "http://localhost:3001/api/logs?level=error"
+curl -u "$DASHBOARD_USER:$DASHBOARD_PASSWORD" "http://localhost:3001/api/logs?level=error"
 
 # Recupera log di una specifica app
-curl "http://localhost:3001/api/logs?app=payment-service"
+curl -u "$DASHBOARD_USER:$DASHBOARD_PASSWORD" "http://localhost:3001/api/logs?app=payment-service"
 ```
 
 ---
@@ -75,7 +76,10 @@ curl "http://localhost:3001/api/logs?app=payment-service"
 ```javascript
 const response = await fetch('http://localhost:3001/api/logs', {
   method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
+  headers: {
+    'Content-Type': 'application/json',
+    'x-api-key': process.env.xApiKey,
+  },
   body: JSON.stringify({
     app: 'my-app',
     level: 'error',
@@ -111,7 +115,7 @@ requests.post('http://localhost:3001/api/logs', json={
     'level': 'info',
     'message': 'Script eseguito con successo',
     'metadata': {'duration': 5.2, 'items': 100}
-})
+}, headers={'x-api-key': 'YOUR_xApiKey'})
 ```
 
 ---
@@ -158,7 +162,10 @@ Visualizza contatori in tempo reale per:
 
 File: `.env.local`
 ```
-DATABASE_URL="mongodb+srv://user:ShadowCmh2025%40%21@cluster0.0flua7d.mongodb.net/log"
+DATABASE_URL="mongodb+srv://username:password@cluster.mongodb.net/log"
+DASHBOARD_USER="admin"
+DASHBOARD_PASSWORD="change-me-strong-password"
+xApiKey="change-me-long-random-api-key"
 ```
 
 ---
@@ -179,7 +186,7 @@ DATABASE_URL="mongodb+srv://user:ShadowCmh2025%40%21@cluster0.0flua7d.mongodb.ne
 1. Push il codice su GitHub
 2. Vai su [vercel.com](https://vercel.com)
 3. Importa il repository
-4. Aggiungi la variabile d'ambiente `DATABASE_URL`
+4. Aggiungi le variabili d'ambiente `DATABASE_URL`, `DASHBOARD_USER`, `DASHBOARD_PASSWORD`, `xApiKey`
 5. Deploy!
 
 ### Con Docker
@@ -199,8 +206,11 @@ CMD ["npm", "start"]
 
 ## 🔒 SICUREZZA PER PRODUZIONE
 
-Prima di andare in produzione, considera:
-- ✅ Aggiungere autenticazione API (API keys, JWT)
+La versione corrente implementa:
+- ✅ Basic Auth su dashboard e API di lettura
+- ✅ API key su `POST /api/logs`
+
+Prima di andare in produzione, considera comunque:
 - ✅ Implementare rate limiting
 - ✅ Validare e sanitizzare tutti gli input
 - ✅ Usare HTTPS

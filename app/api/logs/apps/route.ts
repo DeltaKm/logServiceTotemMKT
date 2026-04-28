@@ -1,9 +1,15 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import Log from '@/models/Log';
+import { requireDashboardAuth } from '@/lib/apiAuth';
 
 // GET - Recupera tutte le app uniche
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const authError = requireDashboardAuth(request);
+  if (authError) {
+    return authError;
+  }
+
   try {
     await dbConnect();
 

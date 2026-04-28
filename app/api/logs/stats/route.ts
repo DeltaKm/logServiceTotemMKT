@@ -1,9 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import Log from '@/models/Log';
+import { requireDashboardAuth } from '@/lib/apiAuth';
 
 // GET - Statistiche sui log
 export async function GET(request: NextRequest) {
+  const authError = requireDashboardAuth(request);
+  if (authError) {
+    return authError;
+  }
+
   try {
     await dbConnect();
 

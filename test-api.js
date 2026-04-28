@@ -2,6 +2,12 @@
 // Esegui con: node test-api.js
 
 const API_URL = 'http://localhost:3000/api/logs';
+const xApiKey = process.env.xApiKey;
+
+if (!xApiKey) {
+  console.error('❌ xApiKey non configurata. Imposta la variabile env prima di eseguire il test.');
+  process.exit(1);
+}
 
 // Funzione per creare log di test
 async function createTestLog(app, level, message, additionalData = {}) {
@@ -10,6 +16,7 @@ async function createTestLog(app, level, message, additionalData = {}) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'x-api-key': xApiKey,
       },
       body: JSON.stringify({
         app,
